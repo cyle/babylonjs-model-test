@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+<title>babylon.js model test</title>
+<style type="text/css">
+html, body, div, canvas {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+</style>
+</head>
+<body>
+<div id="root"><canvas id="render"></canvas></div>
+<!-- babylon libs -->
+<script src="Babylon/Tools/babylon.math.js"></script>
+<script src="Babylon/Tools/babylon.tools.js"></script>
+<script src="Babylon/babylon.engine.js"></script>
+<script src="Babylon/Culling/babylon.boundingSphere.js"></script>
+<script src="Babylon/Culling/babylon.boundingBox.js"></script>
+<script src="Babylon/Culling/babylon.boundingInfo.js"></script>
+<script src="Babylon/Lights/babylon.light.js"></script>
+<script src="Babylon/Lights/babylon.pointLight.js"></script>
+<script src="Babylon/Lights/babylon.spotLight.js"></script>
+<script src="Babylon/Lights/babylon.hemisphericLight.js"></script>
+<script src="Babylon/Lights/babylon.directionalLight.js"></script>
+<script src="Babylon/Lights/Shadows/babylon.shadowGenerator.js"></script>
+<script src="Babylon/Collisions/babylon.collider.js"></script>
+<script src="Babylon/Cameras/babylon.camera.js"></script>
+<script src="Babylon/Cameras/babylon.freeCamera.js"></script>
+<script src="Babylon/Cameras/babylon.touchCamera.js"></script>
+<script src="Babylon/Cameras/babylon.arcRotateCamera.js"></script>
+<script src="Babylon/babylon.scene.js"></script>
+<script src="Babylon/Mesh/babylon.vertexBuffer.js"></script>
+<script src="Babylon/Mesh/babylon.mesh.js"></script>
+<script src="Babylon/Mesh/babylon.subMesh.js"></script>
+<script src="Babylon/Materials/textures/babylon.baseTexture.js"></script>
+<script src="Babylon/Materials/textures/babylon.texture.js"></script>
+<script src="Babylon/Materials/textures/babylon.cubeTexture.js"></script>
+<script src="Babylon/Materials/textures/babylon.renderTargetTexture.js"></script>
+<script src="Babylon/Materials/textures/babylon.mirrorTexture.js"></script>
+<script src="Babylon/Materials/textures/babylon.dynamicTexture.js"></script>
+<script src="Babylon/Materials/textures/babylon.videoTexture.js"></script>
+<script src="Babylon/Materials/babylon.effect.js"></script>
+<script src="Babylon/Materials/babylon.material.js"></script>
+<script src="Babylon/Materials/babylon.standardMaterial.js"></script>
+<script src="Babylon/Materials/babylon.multiMaterial.js"></script>
+<script src="Babylon/Tools/babylon.sceneLoader.js"></script>
+<script src="Babylon/Sprites/babylon.spriteManager.js"></script>
+<script src="Babylon/Sprites/babylon.sprite.js"></script>
+<script src="Babylon/Layer/babylon.layer.js"></script>
+<script src="Babylon/Particles/babylon.particle.js"></script>
+<script src="Babylon/Particles/babylon.particleSystem.js"></script>
+<script src="Babylon/Animations/babylon.animation.js"></script>
+<script src="Babylon/Animations/babylon.animatable.js"></script>
+<script src="Babylon/Culling/Octrees/babylon.octree.js"></script>
+<script src="Babylon/Culling/Octrees/babylon.octreeBlock.js"></script>
+<!-- my stuff -->
+<script>
+
+var canvas = document.getElementById("render");
+var engine = new BABYLON.Engine(canvas, true); // load the BABYLON engine
+var scene = new BABYLON.Scene(engine); // load the BABYLON scene, where all meshes will live
+
+var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI/2, Math.PI/2, 25, new BABYLON.Vector3(0, 0, 0), scene);
+camera.lowerRadiusLimit = 5;
+camera.upperRadiusLimit = 25;
+camera.lowerAlphaLimit = Math.PI * 0.33;
+camera.upperAlphaLimit = Math.PI * 0.66;
+camera.lowerBetaLimit = Math.PI * 0.33;
+camera.upperBetaLimit = Math.PI * 0.66;
+
+// attach the camera to the scene
+scene.activeCamera.attachControl(canvas);
+
+// create a fill light so we can see things
+var light = new BABYLON.PointLight("Omni", new BABYLON.Vector3(15, -15, 25), scene);
+
+// a background plane
+var plane = BABYLON.Mesh.CreatePlane("Plane", 200.0, scene);
+plane.position = new BABYLON.Vector3(0, 0, -8);
+plane.rotation.y = -Math.PI;
+
+// set up an X/Y/Z axis for reference...
+var xBox = BABYLON.Mesh.CreateBox("zBox", 1.0, scene);
+xBox.position = new BABYLON.Vector3(6, 5, 5);
+xBox.material = new BABYLON.StandardMaterial("xBox-material", scene);
+xBox.material.emissiveColor = new BABYLON.Color4(1, 0, 0, 1);
+var yBox = BABYLON.Mesh.CreateBox("yBox", 1.0, scene);
+yBox.position = new BABYLON.Vector3(5, 6, 5);
+yBox.material = new BABYLON.StandardMaterial("yBox-material", scene);
+yBox.material.emissiveColor = new BABYLON.Color4(0, 1, 0, 1);
+var zBox = BABYLON.Mesh.CreateBox("zBox", 1.0, scene);
+zBox.position = new BABYLON.Vector3(5, 5, 6);
+zBox.material = new BABYLON.StandardMaterial("zBox-material", scene);
+zBox.material.emissiveColor = new BABYLON.Color4(0, 0, 1, 1);
+
+/*
+
+	here's the weird part:
+		on dummy-standard, Y = Z... so the nose of the model points along the Z axis instead of the Y axis
+		on dummy-cyle, the exporter from Blender was modified so that Z stays Z, but now textures are weird
+
+*/
+
+var dummy_model_standard = "dummy-standard.babylon";
+var dummy_model_cyle = "dummy-cyle.babylon";
+
+// load model into scene
+BABYLON.SceneLoader.ImportMesh("", "models/", dummy_model_standard, scene, function (newMeshes, particleSystems) {
+	//console.log(newMeshes);
+});
+
+// load model into scene
+BABYLON.SceneLoader.ImportMesh("", "models/", dummy_model_cyle, scene, function (newMeshes, particleSystems) {
+	//console.log(newMeshes);
+	for (i = 0; i < newMeshes.length; i++) {
+		newMeshes[i].position.x = -5;
+	}
+});
+
+// this is the pre-render update() loop
+scene.registerBeforeRender(function () {
+	
+});
+
+// render it
+engine.runRenderLoop(function() {
+	scene.render(); // render it!
+});
+
+// handle window resize
+window.addEventListener("resize", function() {
+	engine.resize(); // resize the engine accordingly
+});
+
+</script>
+</body>
+</html>
